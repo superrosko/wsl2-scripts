@@ -1,0 +1,3 @@
+#!/bin/bash
+echo 3 >/proc/sys/vm/drop_caches
+touch /root/drop_caches_last_run
