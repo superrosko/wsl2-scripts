@@ -9,6 +9,8 @@
 
 Scripts to configure and work in WSL2.
 
+Read more: https://rdevelab.ru/blog/no-category/post/wsl2-setup-for-development.
+
 ### prepare-hosts
 
 The script for adding and replacing IP wsl2 and winhost to the hosts file.
