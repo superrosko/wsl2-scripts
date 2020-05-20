@@ -1,0 +1,39 @@
+#!/bin/bash
+WIN_HOSTS="/mnt/c/Windows/System32/drivers/etc/hosts"
+TMP_HOSTS="/tmp/prepare-hosts"
+WIN_IP=$(grep </etc/resolv.conf 'nameserver' | cut -f 2 -d ' ')
+WSL_IP=$(ip addr show eth0 | grep 'inet ' | cut -f 6 -d ' ' | cut -f 1 -d '/')
+
+export WIN_IP
+export WSL_IP
+
+prepare_hosts() {
+  HOSTS_FILE=$1
+  TMP_HOSTS_FILE=$2
+  MARK=$3
+  IP=$4
+
+  if grep -q "[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\s\{1,\}$MARK" "$HOSTS_FILE"; then
+    echo "Found $MARK marks!"
+    rm -f "$TMP_HOSTS_FILE"
+    cp "$HOSTS_FILE" "$TMP_HOSTS_FILE"
+    sed -i -e "s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\(\s\{1,\}\)$MARK/$IP\1$MARK/g" "$TMP_HOSTS_FILE"
+    sed -i -e "s/[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\(\s\{1,\}\)\(.*\)\(\s\{1,\}\)#$MARK/$IP\1\2\3#$MARK/g" "$TMP_HOSTS_FILE"
+    cat "$TMP_HOSTS_FILE" >"$HOSTS_FILE"
+  else
+    printf "%s %s\n" "$IP" "$MARK" >>"$HOSTS_FILE"
+  fi
+}
+
+echo "Windows IP: $WIN_IP"
+echo "WSL IP: $WSL_IP"
+
+prepare_hosts $WIN_HOSTS $TMP_HOSTS "wsl2" "$WSL_IP"
+prepare_hosts $WIN_HOSTS $TMP_HOSTS "winhost" "$WIN_IP"
+
+printf "New hosts file: \n\n"
+printf "=====================================================================\n"
+cat "$WIN_HOSTS"
+printf "=====================================================================\n"
+rm -f "$TMP_HOSTS"
+printf "\nDONE!\n"
